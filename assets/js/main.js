@@ -33,7 +33,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 /* Typewriter */
-var phrases = ['product management.', 'software development.', 'technical project management.'];
+var phrases = ['product management.', 'software development.', 'technical program management.'];
 var typedEl = document.getElementById('typed');
 var phraseIndex = 0;
 var charIndex = 0;
