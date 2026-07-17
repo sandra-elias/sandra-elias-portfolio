@@ -25,12 +25,15 @@ const SITE = {
     after:
       " student at the University of Waterloo interested in product, operations, & data.",
   },
-  about:
-    "I've led projects in health-tech and industrial automation, shipping products that solved problems for users.",
   current: {
     before: "Incoming Program Manager Intern at ",
     link: { label: "Tesla", href: "https://www.tesla.com/" },
     after: ", working across product and fleet data for Semi Engineering.",
+  },
+  personal: {
+    before:
+      "Outside of school and work, I love trying new restaurants, grabbing matcha, playing soccer, and hanging out with my dog ",
+    after: ".",
   },
   socials: [
     { label: "Email", href: "mailto:sm2elias@uwaterloo.ca", icon: "mail" },
@@ -83,14 +86,21 @@ function Home() {
         {SITE.intro.after}
       </p>
 
-      <p>{SITE.about}</p>
-
       <p>
         {SITE.current.before}
         <a href={SITE.current.link.href} target="_blank" rel="noopener noreferrer">
           {SITE.current.link.label}
         </a>
         {SITE.current.after}
+      </p>
+
+      <p>
+        {SITE.personal.before}
+        <span className="cooper">
+          Cooper
+          <img src="/logos/Cooper.png" alt="Cooper" />
+        </span>
+        {SITE.personal.after}
       </p>
 
       <h2>Contact</h2>
@@ -319,7 +329,7 @@ const css = `
     margin: 3rem 0 1.1rem;
   }
 
-  .site p { margin: 0 0 1.3rem; }
+  .site p { margin: 0 0 1.3rem; text-wrap: pretty; }
   .site p:last-of-type { margin-bottom: 0; }
 
   .site a {
@@ -370,6 +380,38 @@ const css = `
     outline: 2px solid var(--accent);
     outline-offset: 3px;
     border-radius: 2px;
+  }
+
+  .site .cooper {
+    position: relative;
+    color: var(--accent);
+    cursor: default;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s ease;
+  }
+  .site .cooper:hover {
+    border-bottom-color: var(--accent-dk);
+  }
+  .site .cooper img {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    width: 110px;
+    height: 110px;
+    margin-left: 50px;
+    object-fit: cover;
+    border-radius: 18px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(calc(-50% - 4px)) translateX(6px) scale(0.96);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 20;
+  }
+  .site .cooper:hover img {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(calc(-50% - 4px)) translateX(0) scale(1);
   }
 
   .site ul.experience { list-style: none; padding: 0; margin: 0; }
