@@ -372,8 +372,8 @@ const css = `
     width: 100%;
     height: 100%;
   }
-  .site ul.socials a { border-bottom: none; }
-  .site ul.socials a:hover { border-bottom: 1px solid var(--accent-dk); }
+  .site ul.socials a { border-bottom: 1px solid transparent; }
+  .site ul.socials a:hover { border-bottom-color: var(--accent-dk); }
 
   .site a:focus-visible,
   .site button:focus-visible {
