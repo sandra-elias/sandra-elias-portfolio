@@ -8,6 +8,11 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 const NAV = ["Home", "Experience", "Projects"];
 
+function getPageFromHash() {
+  const hash = window.location.hash.slice(1).toLowerCase();
+  return NAV.find((item) => item.toLowerCase() === hash) ?? "Home";
+}
+
 const ICONS = {
   mail: <FiMail />,
   github: <FaGithub />,
@@ -26,13 +31,13 @@ const SITE = {
       " student at the University of Waterloo interested in product, operations, & data.",
   },
   current: {
-    before: "Incoming Program Manager Intern at ",
+    before: "Program Manager Intern at ",
     link: { label: "Tesla", href: "https://www.tesla.com/" },
     after: ", working across product and fleet data for Semi Engineering.",
   },
   personal: {
     before:
-      "Outside of school and work, I love trying new restaurants, grabbing matcha, playing soccer, and hanging out with my dog ",
+      "Outside of school and work, I love trying new restaurants, grabbing matcha, staying active, and hanging out with my dog ",
     after: ".",
   },
   socials: [
@@ -47,7 +52,7 @@ const SITE = {
       logo: "/logos/tesla_logo.jpeg",
       role: "Program Management Intern",
       dates: "Sep 2026 - Dec 2026",
-      description: "Incoming Fall 2026.",
+      description: "Building programs and products for Tesla Semi Engineering.",
     },
     {
       company: "League",
@@ -56,7 +61,7 @@ const SITE = {
       role: "Technical Project Management Intern",
       location: "Toronto, ON",
       dates: "Jan 2026 - Apr 2026",
-      description: "Managed end-to-end delivery of digital health programs.",
+      description: "Delivered digital health products for Canada’s largest insurer.",
     },
     {
       company: "Eclipse Automation",
@@ -65,7 +70,7 @@ const SITE = {
       role: "Business Development Analyst Intern",
       location: "Cambridge, ON",
       dates: "May 2025 - Aug 2025",
-      description: "Led client strategy and nuclear business development.",
+      description: "Led business development for industrial automation.",
     },
   ],
 };
@@ -176,7 +181,7 @@ function Placeholder({ title }) {
 }
 
 export default function App() {
-  const [page, setPage] = useState("Home");
+  const [page, setPage] = useState(getPageFromHash);
   const [isDark, setIsDark] = useState(() => {
     return localStorage.getItem("theme") === "dark";
   });
@@ -185,6 +190,12 @@ export default function App() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
     document.body.style.background = isDark ? "#121212" : "#fff";
   }, [isDark]);
+
+  useEffect(() => {
+    const handleHashChange = () => setPage(getPageFromHash());
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   return (
     <div className={`site${isDark ? " dark" : ""}`}>
@@ -205,10 +216,6 @@ export default function App() {
               key={item}
               href={`#${item.toLowerCase()}`}
               aria-current={page === item ? "page" : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage(item);
-              }}
             >
               {item}
             </a>
