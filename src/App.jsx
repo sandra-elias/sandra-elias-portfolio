@@ -1,10 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FiMail, FiMoon, FiSun } from "react-icons/fi";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 // Personal site — React single-file component.
-// Edit the SITE object below to make it yours. The <style> block holds the
-// visual design; --accent near the top is the reddish-pink color.
 
 const NAV = ["Home", "Experience", "Projects"];
 
@@ -142,25 +140,27 @@ function Experience() {
       <ul className="experience">
         {SITE.experience.map((e) => (
           <li key={e.company}>
-            <div className="experience-row">
-              <img className="experience-logo" src={e.logo} alt={`${e.company} logo`} />
-              <div className="experience-main">
-                <p className="experience-title">{e.role}</p>
-                <p className="experience-company">
-                  {e.companyUrl ? (
-                    <a href={e.companyUrl} target="_blank" rel="noopener noreferrer">
-                      {e.company}
-                    </a>
-                  ) : (
-                    e.company
-                  )}
-                </p>
+            <img className="experience-logo" src={e.logo} alt={`${e.company} logo`} />
+            <div className="experience-body">
+              <div className="experience-row">
+                <div className="experience-main">
+                  <p className="experience-title">{e.role}</p>
+                  <p className="experience-company">
+                    {e.companyUrl ? (
+                      <a href={e.companyUrl} target="_blank" rel="noopener noreferrer">
+                        {e.company}
+                      </a>
+                    ) : (
+                      e.company
+                    )}
+                  </p>
+                </div>
+                <div className="experience-meta">
+                  <p>{e.dates}</p>
+                </div>
               </div>
-              <div className="experience-meta">
-                <p>{e.dates}</p>
-              </div>
+              <p className="experience-description">{e.description}</p>
             </div>
-            <p className="experience-description">{e.description}</p>
           </li>
         ))}
       </ul>
@@ -178,6 +178,72 @@ function Placeholder({ title }) {
       <p>Nothing here yet — this is where your {title.toLowerCase()} will go.</p>
     </>
   );
+}
+
+const TRAIL_LIFE = 450; // ms a point of the trail stays visible
+
+function CursorTrail() {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const canvas = ref.current;
+    const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!canvas || !canHover || reducedMotion) return;
+
+    const ctx = canvas.getContext("2d");
+    let points = [];
+    let frame = 0;
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+
+    const draw = () => {
+      const now = performance.now();
+      points = points.filter((p) => now - p.t < TRAIL_LIFE);
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.lineCap = "butt";
+      ctx.shadowColor = "rgba(211, 60, 102, 0.6)";
+      ctx.shadowBlur = 8;
+
+      // Each segment runs midpoint to midpoint so the curve stays smooth
+      // while its width and opacity taper with age.
+      for (let i = 1; i < points.length - 1; i++) {
+        const prev = points[i - 1];
+        const cur = points[i];
+        const next = points[i + 1];
+        const life = 1 - (now - cur.t) / TRAIL_LIFE;
+        ctx.beginPath();
+        ctx.moveTo((prev.x + cur.x) / 2, (prev.y + cur.y) / 2);
+        ctx.quadraticCurveTo(cur.x, cur.y, (cur.x + next.x) / 2, (cur.y + next.y) / 2);
+        ctx.lineWidth = 0.5 + life * 2.5;
+        ctx.strokeStyle = `rgba(211, 60, 102, ${life * 0.75})`;
+        ctx.stroke();
+      }
+
+      frame = points.length ? requestAnimationFrame(draw) : 0;
+    };
+
+    const handleMove = (e) => {
+      points.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+      if (!frame) frame = requestAnimationFrame(draw);
+    };
+
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return <canvas ref={ref} className="cursor-trail" aria-hidden="true" />;
 }
 
 export default function App() {
@@ -200,6 +266,7 @@ export default function App() {
   return (
     <div className={`site${isDark ? " dark" : ""}`}>
       <style>{css}</style>
+      <CursorTrail />
       <button
         type="button"
         className="theme-toggle"
@@ -246,7 +313,7 @@ const css = `
     --accent: #d33c66;      /* reddish pink */
     --accent-dk: #ac2a4f;
     --measure: 38rem;
-    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --serif: "Gelasio", Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
     font-family: var(--sans);
@@ -266,7 +333,18 @@ const css = `
     background: #121212;
   }
 
+  .site .cursor-trail {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
   .site .wrap {
+    position: relative;
+    z-index: 1;
     max-width: var(--measure);
     margin: 0 auto;
     padding: 3rem 1.5rem 5rem;
@@ -317,8 +395,8 @@ const css = `
 
   .site h1 {
     font-family: var(--serif);
-    font-size: 2.4rem;
-    font-weight: 700;
+    font-size: 2rem;
+    font-weight: 600;
     letter-spacing: -0.015em;
     line-height: 1.1;
     color: var(--ink);
@@ -422,7 +500,16 @@ const css = `
   }
 
   .site ul.experience { list-style: none; padding: 0; margin: 0; }
+  .site ul.experience li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
   .site ul.experience li + li { margin-top: 2.4rem; }
+  .site .experience-body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 
   .site .experience-row {
     display: flex;
@@ -430,9 +517,8 @@ const css = `
     gap: 1rem;
   }
   .site .experience-logo {
-    width: 52px;
-    height: 52px;
-    border-radius: 12px;
+    width: 60px;
+    height: 60px;
     object-fit: cover;
     flex: 0 0 auto;
   }
@@ -440,6 +526,7 @@ const css = `
     flex: 1 1 auto;
     min-width: 0;
     padding-top: 0.15rem;
+    align-self: baseline;
   }
   .site .experience-title {
     margin: 0;
@@ -457,10 +544,10 @@ const css = `
   .site .experience-description {
     margin: 0.55rem 0 0;
     line-height: 1.5;
-    margin-left: calc(52px + 1rem);
   }
   .site .experience-meta {
     flex: 0 0 auto;
+    align-self: baseline;
     text-align: right;
     color: var(--muted);
     font-size: 0.85rem;
@@ -472,7 +559,7 @@ const css = `
     .site * { transition: none !important; }
   }
   @media (max-width: 480px) {
-    .site h1 { font-size: 2rem; }
+    .site h1 { font-size: 1.75rem; }
     .site nav { gap: 1.1rem; }
   }
 `;
