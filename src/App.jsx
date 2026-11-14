@@ -6,9 +6,17 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 const NAV = ["Home", "Experience", "Projects"];
 
-function getPageFromHash() {
+function pathFor(item) {
+  return item === "Home" ? "/" : `/${item.toLowerCase()}`;
+}
+
+function getPageFromPath() {
+  // Old #section links still work: rewrite them to the clean path.
   const hash = window.location.hash.slice(1).toLowerCase();
-  return NAV.find((item) => item.toLowerCase() === hash) ?? "Home";
+  if (hash) window.history.replaceState(null, "", hash === "home" ? "/" : `/${hash}`);
+
+  const path = window.location.pathname.replace(/^\/|\/$/g, "").toLowerCase();
+  return NAV.find((item) => item.toLowerCase() === path) ?? "Home";
 }
 
 const ICONS = {
@@ -247,7 +255,7 @@ function CursorTrail() {
 }
 
 export default function App() {
-  const [page, setPage] = useState(getPageFromHash);
+  const [page, setPage] = useState(getPageFromPath);
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) return saved === "dark";
@@ -276,10 +284,18 @@ export default function App() {
   };
 
   useEffect(() => {
-    const handleHashChange = () => setPage(getPageFromHash());
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    const handlePopState = () => setPage(getPageFromPath());
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
+
+  const navigate = (e, item) => {
+    // Let cmd/ctrl-click open the page in a new tab as usual.
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    if (item !== page) window.history.pushState(null, "", pathFor(item));
+    setPage(item);
+  };
 
   return (
     <div className={`site${isDark ? " dark" : ""}`}>
@@ -299,7 +315,8 @@ export default function App() {
           {NAV.map((item) => (
             <a
               key={item}
-              href={`#${item.toLowerCase()}`}
+              href={pathFor(item)}
+              onClick={(e) => navigate(e, item)}
               aria-current={page === item ? "page" : undefined}
             >
               {item}
