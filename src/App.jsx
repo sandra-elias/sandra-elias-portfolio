@@ -29,7 +29,7 @@ const SITE = {
       " student at the University of Waterloo interested in product, operations, & data.",
   },
   current: {
-    before: "Program Manager Intern at ",
+    before: "Technical Program Manager Intern at ",
     link: { label: "Tesla", href: "https://www.tesla.com/" },
     after: ", working across product and fleet data for Semi Engineering.",
   },
@@ -48,7 +48,7 @@ const SITE = {
       company: "Tesla",
       companyUrl: "https://www.tesla.com/",
       logo: "/logos/tesla_logo.jpeg",
-      role: "Program Management Intern",
+      role: "Technical Program Management Intern",
       dates: "Sep 2026 - Dec 2026",
       description: "Building programs and products for Tesla Semi Engineering.",
     },
@@ -519,6 +519,7 @@ const css = `
   .site .experience-logo {
     width: 60px;
     height: 60px;
+    border-radius: 12px;
     object-fit: cover;
     flex: 0 0 auto;
   }
