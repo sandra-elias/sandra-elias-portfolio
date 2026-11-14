@@ -249,13 +249,31 @@ function CursorTrail() {
 export default function App() {
   const [page, setPage] = useState(getPageFromHash);
   const [isDark, setIsDark] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
 
   useEffect(() => {
-    localStorage.setItem("theme", isDark ? "dark" : "light");
     document.body.style.background = isDark ? "#121212" : "#fff";
   }, [isDark]);
+
+  // Follow system theme changes until the visitor picks one with the toggle.
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e) => {
+      if (!localStorage.getItem("theme")) setIsDark(e.matches);
+    };
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDark((d) => {
+      localStorage.setItem("theme", d ? "light" : "dark");
+      return !d;
+    });
+  };
 
   useEffect(() => {
     const handleHashChange = () => setPage(getPageFromHash());
@@ -271,7 +289,7 @@ export default function App() {
         type="button"
         className="theme-toggle"
         aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        onClick={() => setIsDark((d) => !d)}
+        onClick={toggleTheme}
       >
         {isDark ? <FiSun /> : <FiMoon />}
       </button>
