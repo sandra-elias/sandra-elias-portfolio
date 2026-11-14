@@ -4,7 +4,7 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 // Personal site — React single-file component.
 
-const NAV = ["Home", "Experience", "Projects"];
+const NAV = ["Home", "Experience"]; // TODO: add "Projects" back once there are projects to show
 
 function pathFor(item) {
   return item === "Home" ? "/" : `/${item.toLowerCase()}`;
