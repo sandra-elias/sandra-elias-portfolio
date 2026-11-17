@@ -597,5 +597,15 @@ const css = `
   @media (max-width: 480px) {
     .site h1 { font-size: 1.75rem; }
     .site nav { gap: 1.1rem; }
+
+    /* Stack dates under the company so the title gets the full width. */
+    .site .experience-row {
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .site .experience-meta {
+      align-self: auto;
+      text-align: left;
+    }
   }
 `;
