@@ -4,19 +4,26 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 // Personal site — React single-file component.
 
-const NAV = ["Home", "Experience"]; // TODO: add "Projects" back once there are projects to show
+const NAV = ["Home", "Experience", "Projects"];
 
 function pathFor(item) {
   return item === "Home" ? "/" : `/${item.toLowerCase()}`;
 }
 
-function getPageFromPath() {
+// A route is { page, slug }: slug is set when viewing a single project.
+function getRouteFromPath() {
   // Old #section links still work: rewrite them to the clean path.
   const hash = window.location.hash.slice(1).toLowerCase();
   if (hash) window.history.replaceState(null, "", hash === "home" ? "/" : `/${hash}`);
 
-  const path = window.location.pathname.replace(/^\/|\/$/g, "").toLowerCase();
-  return NAV.find((item) => item.toLowerCase() === path) ?? "Home";
+  const [first = "", second] = window.location.pathname
+    .replace(/^\/|\/$/g, "")
+    .toLowerCase()
+    .split("/");
+  const page = NAV.find((item) => item.toLowerCase() === first) ?? "Home";
+  const slug =
+    page === "Projects" && SITE.projects.some((p) => p.slug === second) ? second : null;
+  return { page, slug };
 }
 
 const ICONS = {
@@ -77,6 +84,66 @@ const SITE = {
       location: "Cambridge, ON",
       dates: "May 2025 - Aug 2025",
       description: "Led business development for industrial automation.",
+    },
+  ],
+  projects: [
+    {
+      slug: "forkcast",
+      name: "Forkcast",
+      summary:
+        "A restaurant roulette web app for when nobody can decide what's for dinner.",
+      links: [
+        { label: "Live site", href: "https://forkcast-whats-for-dinner.vercel.app" },
+        { label: "GitHub", href: "https://github.com/sandra-elias/forkcast" },
+      ],
+      // Screenshots in the app's light and dark themes. The gallery shows
+      // the opposite of the portfolio's current theme so they stand out.
+      images: {
+        light: [
+          { src: "/projects/forkcast/landing-light.png", alt: "Forkcast landing page, with a zip or postal code field and a Use my location button" },
+          { src: "/projects/forkcast/map.jpg", alt: "Map of Toronto with the search radius drawn as a circle, a radius slider and a SPIN button" },
+          { src: "/projects/forkcast/filters.jpg", alt: "Filters panel open, with an Open now switch and cuisines to exclude" },
+          { src: "/projects/forkcast/result.jpg", alt: "Spin result card for Touhenboku Ramen, a Japanese restaurant, with distance, address, phone, website and a Get directions button" },
+        ],
+        dark: [
+          { src: "/projects/forkcast/landing-dark.png", alt: "Forkcast landing page in dark mode, with a zip or postal code field and a Use my location button" },
+          { src: "/projects/forkcast/map-dark.jpg", alt: "Dark mode map of Toronto with the search radius drawn as a circle, a radius slider and a SPIN button" },
+          { src: "/projects/forkcast/filters-dark.jpg", alt: "Dark mode filters panel open, with an Open now switch and cuisines to exclude" },
+          { src: "/projects/forkcast/result-dark.jpg", alt: "Dark mode spin result card for Sumaq Iraqi Charcoal Grill, with distance, address and a Get directions button" },
+        ],
+      },
+      overview:
+        "Enter a US zip code or Canadian postal code (or share your location), pick how far you’re willing to travel, and hit Spin. Forkcast picks a random nearby restaurant and gives you a Google Maps link to get there.",
+      sections: [
+        {
+          title: "The problem",
+          body: "Picking a place to eat with friends often takes longer than the meal. Everyone says “I don’t care, you pick,” then turns down every suggestion. Review apps don’t help, because they add hundreds of options to compare. People don’t need more choices. They need something to make the call.",
+        },
+        {
+          title: "Who it’s for",
+          items: [
+            "Friends, roommates and families stuck on “where should we eat?”",
+            "Anyone eating alone who’s tired of scrolling through reviews",
+          ],
+        },
+        {
+          title: "How it works",
+          items: [
+            "Type a zip or postal code, or use your location.",
+            "A map shows your search radius. Adjust the distance, keep “Open now” on, and exclude cuisines you’re not in the mood for.",
+            "Spin. Restaurant names cycle like a wheel and land on one, with its cuisine, distance, address and hours.",
+            "Not feeling it? “Spin again” never repeats a restaurant.",
+          ],
+        },
+        {
+          title: "Decisions",
+          items: [
+            { lead: "One input box, no country picker.", text: "US and Canadian codes look different, so the app works out the country from the format. That’s one less step before the first spin." },
+            { lead: "No ratings, on purpose.", text: "The goal is to stop comparing options, so I chose free open data over a paid source with ratings." },
+            { lead: "Privacy by default.", text: "Your location is rounded to about 100 m before it leaves your device." },
+          ],
+        },
+      ],
     },
   ],
 };
@@ -176,6 +243,121 @@ function Experience() {
   );
 }
 
+function Projects({ onOpen }) {
+  return (
+    <>
+      <h1>
+        Projects
+        <span className="dot">.</span>
+      </h1>
+
+      <ul className="projects">
+        {SITE.projects.map((p) => (
+          <li key={p.slug}>
+            <a
+              className="project-link"
+              href={`/projects/${p.slug}`}
+              onClick={(e) => onOpen(e, p.slug)}
+            >
+              <span className="project-name">{p.name}</span>
+              <span className="project-summary">{p.summary}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function Gallery({ images }) {
+  // Both sets have the same screens in the same order.
+  const [current, setCurrent] = useState(0);
+  const image = images[current];
+  const next = () => setCurrent((i) => (i + 1) % images.length);
+
+  return (
+    <div className="gallery">
+      <div className="gallery-frame">
+        <div className="gallery-bar" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        <button
+          type="button"
+          className="gallery-main"
+          onClick={next}
+          aria-label={`Screenshot ${current + 1} of ${images.length}. Show next screenshot`}
+        >
+          <img src={image.src} alt={image.alt} />
+        </button>
+      </div>
+
+      <div className="gallery-thumbs">
+        {images.map((img, i) => (
+          <button
+            key={i}
+            type="button"
+            className="gallery-thumb"
+            onClick={() => setCurrent(i)}
+            aria-label={`Show screenshot ${i + 1}`}
+            aria-current={i === current ? "true" : undefined}
+          >
+            <img src={img.src} alt="" loading="lazy" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProjectDetail({ project, onBack, isDark }) {
+  return (
+    <article className="project">
+      <a className="back" href="/projects" onClick={onBack}>
+        ← All projects
+      </a>
+
+      <h1>{project.name}</h1>
+      <p>{project.summary}</p>
+
+      <ul className="project-links">
+        {project.links.map((l) => (
+          <li key={l.label}>
+            <a href={l.href} target="_blank" rel="noopener noreferrer">
+              {l.label} ↗
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <p>{project.overview}</p>
+
+      <Gallery images={isDark ? project.images.light : project.images.dark} />
+
+      {project.sections.map((sec) => (
+        <section key={sec.title}>
+          <h2>{sec.title}</h2>
+          {sec.body && <p>{sec.body}</p>}
+          {sec.items && (
+            <ul className="project-list">
+              {sec.items.map((item) =>
+                typeof item === "string" ? (
+                  <li key={item}>{item}</li>
+                ) : (
+                  <li key={item.lead}>
+                    <strong>{item.lead}</strong> {item.text}
+                  </li>
+                )
+              )}
+            </ul>
+          )}
+        </section>
+      ))}
+    </article>
+  );
+}
+
 function Placeholder({ title }) {
   return (
     <>
@@ -255,7 +437,9 @@ function CursorTrail() {
 }
 
 export default function App() {
-  const [page, setPage] = useState(getPageFromPath);
+  const [route, setRoute] = useState(getRouteFromPath);
+  const { page, slug } = route;
+  const project = slug ? SITE.projects.find((p) => p.slug === slug) : null;
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) return saved === "dark";
@@ -284,18 +468,21 @@ export default function App() {
   };
 
   useEffect(() => {
-    const handlePopState = () => setPage(getPageFromPath());
+    const handlePopState = () => setRoute(getRouteFromPath());
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const navigate = (e, item) => {
+  const go = (e, next) => {
     // Let cmd/ctrl-click open the page in a new tab as usual.
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
-    if (item !== page) window.history.pushState(null, "", pathFor(item));
-    setPage(item);
+    const path = next.slug ? `/projects/${next.slug}` : pathFor(next.page);
+    if (path !== window.location.pathname) window.history.pushState(null, "", path);
+    setRoute(next);
+    window.scrollTo(0, 0);
   };
+  const navigate = (e, item) => go(e, { page: item, slug: null });
 
   return (
     <div className={`site${isDark ? " dark" : ""}`}>
@@ -328,6 +515,14 @@ export default function App() {
           <Home />
         ) : page === "Experience" ? (
           <Experience />
+        ) : page === "Projects" && project ? (
+          <ProjectDetail
+            project={project}
+            onBack={(e) => navigate(e, "Projects")}
+            isDark={isDark}
+          />
+        ) : page === "Projects" ? (
+          <Projects onOpen={(e, s) => go(e, { page: "Projects", slug: s })} />
         ) : (
           <Placeholder title={page} />
         )}
@@ -441,10 +636,8 @@ const css = `
 
   .site h2 {
     font-family: var(--sans);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    font-size: 1rem;
+    font-weight: 400;
     color: var(--ink);
     margin: 3rem 0 1.1rem;
   }
@@ -590,6 +783,140 @@ const css = `
   }
   .site .experience-meta p { margin: 0; }
   .site .experience-meta p + p { margin-top: 0.15rem; }
+
+  /* Projects list */
+  .site ul.projects { list-style: none; padding: 0; margin: 0; }
+  .site ul.projects li + li { margin-top: 1.8rem; }
+  .site a.project-link {
+    display: block;
+    border-bottom: none;
+  }
+  .site .project-name {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 400;
+    line-height: 1.3;
+    border-bottom: 1px solid transparent;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .site a.project-link:hover .project-name {
+    color: var(--accent-dk);
+    border-bottom-color: var(--accent-dk);
+  }
+  .site .project-summary {
+    display: block;
+    margin-top: 0.3rem;
+    color: var(--muted);
+    text-wrap: pretty; /* same line breaks as the summary on the project page */
+  }
+
+  /* Project detail */
+  .site .back {
+    display: inline-block;
+    margin-bottom: 1.4rem;
+  }
+  .site .project h1 {
+    font-family: var(--sans);
+    /* Lines the summary up with where it sits on the Projects list */
+    margin-bottom: calc(0.9rem - 2.6px);
+  }
+  .site .project h2 {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .site ul.project-links {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    padding: 0;
+    margin: 0 0 1.9rem;
+  }
+  /* Screenshot gallery: one big shot in a browser frame, thumbnails below */
+  .site .gallery {
+    --frame-bg: #f7f7f7;
+    --frame-line: #ececec;
+    --bar-bg: #2a2a2a;
+    margin: 2rem 0 0.5rem;
+  }
+  .site.dark .gallery {
+    --frame-bg: #1d1d1d;
+    --frame-line: #2c2c2c;
+    --bar-bg: #2c2c2c;
+  }
+  .site .gallery-frame {
+    padding: 1.25rem;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-line);
+    border-radius: 6px;
+  }
+  .site .gallery-bar {
+    display: flex;
+    gap: 6px;
+    padding: 9px 12px;
+    background: var(--bar-bg);
+    border-radius: 6px 6px 0 0;
+  }
+  .site .gallery-bar span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+  }
+  .site .gallery-main {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+  .site .gallery-main img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 0 0 6px 6px;
+  }
+  .site .gallery-thumbs {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+    overflow-x: auto;
+    padding: 3px;
+  }
+  .site .gallery-thumb {
+    flex: 1 1 0;
+    min-width: 84px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity .15s ease, border-color .15s ease;
+  }
+  .site .gallery-thumb:hover { opacity: 0.85; }
+  .site .gallery-thumb[aria-current="true"] {
+    opacity: 1;
+    border-color: var(--accent);
+  }
+  .site .gallery-thumb img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 6px;
+  }
+  .site ul.project-list {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .site ul.project-list li { margin: 0.45rem 0; line-height: 1.55; }
+  .site ul.project-list li::marker { color: var(--accent); }
+  .site ul.project-list strong { color: inherit; font-weight: 400; }
 
   @media (prefers-reduced-motion: reduce) {
     .site * { transition: none !important; }
